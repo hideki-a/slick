@@ -92,6 +92,7 @@
             };
 
             _.initials = {
+                element: element,
                 animating: false,
                 dragging: false,
                 autoPlayTimer: null,
@@ -704,14 +705,14 @@
             case 'previous':
                 slideOffset = indexOffset === 0 ? _.options.slidesToScroll : _.options.slidesToShow - indexOffset;
                 if (_.slideCount > _.options.slidesToShow) {
-                    _.slideHandler(_.currentSlide - slideOffset, false, dontAnimate);
+                    _.slideHandler(_.currentSlide - slideOffset, false, dontAnimate, event.data.fireByKeydown);
                 }
                 break;
 
             case 'next':
                 slideOffset = indexOffset === 0 ? _.options.slidesToScroll : indexOffset;
                 if (_.slideCount > _.options.slidesToShow) {
-                    _.slideHandler(_.currentSlide + slideOffset, false, dontAnimate);
+                    _.slideHandler(_.currentSlide + slideOffset, false, dontAnimate, event.data.fireByKeydown);
                 }
                 break;
 
@@ -1324,8 +1325,9 @@
     };
 
     Slick.prototype.initADA = function() {
+        // TODO: numDotGroupsは様々なバリエーションで要確認
         var _ = this,
-                numDotGroups = Math.ceil(_.slideCount / _.options.slidesToShow),
+                numDotGroups = _.slideCount,
                 tabControlIndexes = _.getNavigableIndexes().filter(function(val) {
                     return (val >= 0) && (val < _.slideCount);
                 });
@@ -1336,6 +1338,7 @@
         }).find('a, input, button, select').attr({
             'tabindex': '-1'
         });
+        _.$slides.filter(':not(.slick-cloned)').find('a').removeAttr('tabindex');
 
         if (_.$dots !== null) {
             _.$slides.not(_.$slideTrack.find('.slick-cloned')).each(function(i) {
@@ -1495,6 +1498,79 @@
         $(window).on('load.slick.slick-' + _.instanceUid, _.setPosition);
         $(_.setPosition);
 
+        const $focusables = _.$slides.find('a');
+        const nFocusables = $focusables.length;
+        _.$slides.find('a').on('keydown', function (event) {
+            if (event.shiftKey && event.keyCode === 9) {
+                event.preventDefault();
+                let currentAnchorIndex = null;
+                $focusables.each(function (index, elem) {
+                    if (elem === event.target) {
+                        currentAnchorIndex = index;
+                    }
+                });
+                if (currentAnchorIndex !== null && currentAnchorIndex - 1 >= 0) {
+                    const $focusTarget = $focusables.eq(currentAnchorIndex - 1);
+                    const index = parseInt($focusTarget.closest('.slick-slide').data('slick-index'));
+                    _.changeSlide({
+                        data: {
+                            message: 'index',
+                            index: index
+                        }
+                    }, true);
+                    $focusTarget.focus();
+                } else if (currentAnchorIndex === 0) {
+                    $(_.element).find('.slick-prev').focus();
+                }
+            } else if (event.keyCode === 9) {
+                event.preventDefault();
+                let currentAnchorIndex = null;
+                $focusables.each(function (index, elem) {
+                    if (elem === event.target) {
+                        currentAnchorIndex = index;
+                    }
+                });
+                if (currentAnchorIndex !== null && currentAnchorIndex + 1 < nFocusables) {
+                    const $focusTarget = $focusables.eq(currentAnchorIndex + 1);
+                    const index = parseInt($focusTarget.closest('.slick-slide').data('slick-index'));
+                    _.changeSlide({
+                        data: {
+                            message: 'index',
+                            index: index
+                        }
+                    }, true);
+                    $focusTarget.focus();
+                } else if (currentAnchorIndex) {
+                    $(_.element).find('.slick-next').focus();
+                }
+            }
+        });
+        $(_.element).find('.slick-prev').on('keydown', function (event) {
+            if (event.keyCode === 9) {
+                event.preventDefault();
+                const index = parseInt($focusables.eq(0).closest('.slick-slide').data('slick-index'));
+                _.changeSlide({
+                    data: {
+                        message: 'index',
+                        index: index
+                    }
+                }, true);
+                $focusables.eq(0).focus();
+            }
+        });
+        $(_.element).find('.slick-next').on('keydown', function (event) {
+            if (event.shiftKey && event.keyCode === 9) {
+                event.preventDefault();
+                const index = parseInt($focusables.eq(nFocusables - 1).closest('.slick-slide').data('slick-index'));
+                _.changeSlide({
+                    data: {
+                        message: 'index',
+                        index: index
+                    }
+                }, true);
+                $focusables.eq(nFocusables - 1).focus();
+            }
+        });
     };
 
     Slick.prototype.initUI = function() {
@@ -1519,18 +1595,23 @@
     Slick.prototype.keyHandler = function(event) {
 
         var _ = this;
-         //Dont slide if the cursor is inside the form fields and arrow keys are pressed
-        if(!event.target.tagName.match('TEXTAREA|INPUT|SELECT')) {
-            if (event.keyCode === 37 && _.options.accessibility === true) {
+
+        if (event.target.getAttribute('role') === 'tab') {
+            const positionData = event.target.getAttribute('aria-label');
+            const position = parseInt(positionData.replace(/(\d+) of (\d+)/, '$1'));
+            const total = parseInt(positionData.replace(/(\d+) of (\d+)/, '$2'));
+            if (event.keyCode === 37 && 0 < position - 1) {
                 _.changeSlide({
                     data: {
-                        message: _.options.rtl === true ? 'next' :  'previous'
+                        message: _.options.rtl === true ? 'next' :  'previous',
+                        fireByKeydown: true
                     }
                 });
-            } else if (event.keyCode === 39 && _.options.accessibility === true) {
+            } else if (event.keyCode === 39 && position + 1 <= total) {
                 _.changeSlide({
                     data: {
-                        message: _.options.rtl === true ? 'previous' : 'next'
+                        message: _.options.rtl === true ? 'previous' : 'next',
+                        fireByKeydown: true
                     }
                 });
             }
@@ -2495,7 +2576,7 @@
 
     };
 
-    Slick.prototype.slideHandler = function(index, sync, dontAnimate) {
+    Slick.prototype.slideHandler = function(index, sync, dontAnimate, fireByKeydown) {
 
         var targetSlide, animSlide, oldSlide, slideLeft, targetLeft = null,
             _ = this, navTarget;
@@ -2586,7 +2667,7 @@
 
         }
 
-        _.updateDots();
+        _.updateDots(fireByKeydown);
         _.updateArrows();
 
         if (_.options.fade === true) {
@@ -2977,7 +3058,7 @@
 
     };
 
-    Slick.prototype.updateDots = function() {
+    Slick.prototype.updateDots = function(fireByKeydown) {
 
         var _ = this;
 
@@ -2992,6 +3073,10 @@
                 .find('li')
                 .eq(Math.floor(_.currentSlide / _.options.slidesToScroll))
                 .addClass('slick-active');
+
+            if (fireByKeydown) {
+                _.$dots.find('.slick-active button').focus();
+            }
 
         }
 

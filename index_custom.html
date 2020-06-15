@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width">
+  <title>slickのアクセシビリティ向上の研究</title>
+  <link rel="stylesheet" href="slick/slick.css">
+  <link rel="stylesheet" href="slick/slick-theme.css">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      padding: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    .slider {
+        width: 50%;
+        margin: 100px auto;
+    }
+
+    .slick-slide {
+      margin: 0px 20px;
+    }
+
+    .slick-slide img {
+      width: 100%;
+    }
+
+    .slick-prev:before,
+    .slick-next:before {
+      color: black;
+    }
+
+    .slick-slide {
+      transition: all ease-in-out .3s;
+      opacity: .2;
+    }
+
+    .slick-slide a {
+      display: block;
+    }
+    
+    .slick-active {
+      opacity: .5;
+    }
+
+    .slick-current {
+      opacity: 1;
+    }
+
+    .slick-dots li.slick-active button::before {
+      opacity: 1;
+      color: #4d4d4d;
+    }
+
+    .slick-slide a:focus,
+    .slick-dots li button:focus,
+    .slick-prev:focus,
+    .slick-next:focus {
+      outline: 2px solid rgb(0, 95, 204);
+    }
+  </style>
+</head>
+<body>
+  <h1>slickのアクセシビリティ向上の研究</h1>
+  <h2>変更内容</h2>
+  <ul>
+    <li>スライドにa要素がある場合、キーボードでフォーカス可能にする</li>
+    <li>ドットをキーボードで操作してスライドを左右に動かすことができるようにする（ドットのフォーカスとパネルの表示がずれないようにする。ドットがない場合の対応は要検討。）</li>
+  </ul>
+  <p>ダミーテキスト。○○に移動するには<a href="#">リンクテキスト</a>をクリックします。</p>
+  <section class="slider">
+    <div>
+      <img src="http://placehold.it/350x100?text=1-1" alt="スライド1-1">
+    </div>
+    <div>
+      <img src="http://placehold.it/350x100?text=1-2" alt="スライド1-2">
+    </div>
+    <div>
+      <a href="https://alfasado.net/"><img src="http://placehold.it/350x100?text=1-3" alt="スライド1-3"></a>
+    </div>
+    <div>
+      <img src="http://placehold.it/350x100?text=1-4" alt="スライド1-4">
+    </div>
+    <div>
+      <img src="http://placehold.it/350x100?text=1-5" alt="スライド1-5">
+    </div>
+    <div>
+      <a href="https://powercms.jp/"><img src="http://placehold.it/350x100?text=1-6" alt="スライド1-6"></a>
+    </div>
+    <div>
+      <a href="https://powercmsx.jp/"><img src="http://placehold.it/350x100?text=1-7" alt="スライド1-7"></a>
+    </div>
+    <div>
+      <img src="http://placehold.it/350x100?text=1-8" alt="スライド1-8">
+    </div>
+    <div>
+      <img src="http://placehold.it/350x100?text=1-9" alt="スライド1-9">
+    </div>
+    <div>
+      <img src="http://placehold.it/350x100?text=1-10" alt="スライド1-10">
+    </div>
+  </section>
+  <section class="slider">
+    <div>
+      <a href="https://alfasado.net/"><img src="http://placehold.it/350x100?text=2-1" alt="スライド2-1"></a>
+    </div>
+    <div>
+      <a href="https://powercms.jp/"><img src="http://placehold.it/350x100?text=2-2" alt="スライド2-2"></a>
+    </div>
+    <div>
+      <a href="https://powercmsx.jp/"><img src="http://placehold.it/350x100?text=2-3" alt="スライド2-3"></a>
+    </div>
+  </section>
+  <p>ダミーテキスト。○○に移動するには<a href="#">リンクテキスト</a>をクリックします。</p>
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="slick/slick.js"></script>
+  <script type="text/javascript">
+    $(function() {
+      $(".slider").slick({
+        dots: true,
+        centerMode: true,
+        slidesToShow: 1,
+        slidesToScroll: 1,
+        waitForAnimate: true,
+        centerMode: true,
+        accessibility: true
+      });
+    });
+  </script>
+</body>
+</html>
