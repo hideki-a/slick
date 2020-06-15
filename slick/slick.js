@@ -1546,7 +1546,7 @@
             }
         });
         $(_.element).find('.slick-prev').on('keydown', function (event) {
-            if (event.keyCode === 9) {
+            if (!event.shiftKey && event.keyCode === 9) {
                 event.preventDefault();
                 const index = parseInt($focusables.eq(0).closest('.slick-slide').data('slick-index'));
                 _.changeSlide({
